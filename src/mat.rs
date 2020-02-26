@@ -36,7 +36,9 @@ impl RNMat{
     pub fn push_col(&mut self, col: Vec<RNum>){
         let row_cnt = self.mat.len();
         if  row_cnt == 0{
-            self.mat.push(col);
+            self.mat.extend(
+                col.into_iter().map(|ele| vec![ele]).collect::<Vec<Vec<RNum>>>()
+            );
         }else{
             assert!(row_cnt == col.len());
             for (i, ele) in col.into_iter().enumerate(){
@@ -193,8 +195,15 @@ mod test_rnmat{
         assert_eq!(0, rnm.get_col_cnt());
 
         rnm.push_col(vec![RNum::new(1, 2), RNum::new(3, 4)]);
-        assert_eq!(1, rnm.get_row_cnt());
-        assert_eq!(2, rnm.get_col_cnt());
+        assert_eq!(
+            rnm, 
+            RNMat::from(
+                vec![
+                    vec![(1, 2)],
+                    vec![(3, 4)],
+                ]
+            )
+        );
     }
 
     #[test]
