@@ -1,6 +1,4 @@
-#[path = "rnum.rs"]
-mod rnum;
-use rnum::RNum;
+use super::rnum::RNum;
 
 #[derive(Debug)]
 pub struct RNMat{
@@ -12,7 +10,7 @@ impl RNMat{
         RNMat{
             mat: Vec::new(),
         }
-    }
+    }   
 
     pub fn get_row_cnt(&self) -> usize{
         self.mat.len()
@@ -37,7 +35,9 @@ impl RNMat{
         let row_cnt = self.mat.len();
         if  row_cnt == 0{
             self.mat.extend(
-                col.into_iter().map(|ele| vec![ele]).collect::<Vec<Vec<RNum>>>()
+                col.into_iter()
+                    .map(|ele| vec![ele])
+                    .collect::<Vec<Vec<RNum>>>()
             );
         }else{
             assert!(row_cnt == col.len());
@@ -52,12 +52,17 @@ impl RNMat{
         self.mat.swap(rindex_a, rindex_b);
     }
 
-    /// Check before matrix multiplication.
-    fn is_valid_dimension(&self, other:&RNMat) -> bool{
-        (self.mat.len() + other.mat.len() == 0) || (self.get_col_cnt() == other.mat.len())
+    pub fn row_mul_scalar(&mut self, factor: RNum, index:usize){
+        self.mat[index]
+            .iter_mut()
+            .for_each(|ele| *ele = *ele * factor);
     }
 
-    
+    /// Check before matrix multiplication.
+    fn is_valid_dimension(&self, other:&RNMat) -> bool{
+        (self.mat.len() + other.mat.len() == 0) ||
+        (self.get_col_cnt() == other.mat.len())
+    }
 }
 
 impl From<Vec<Vec<(i32, i32)>>> for RNMat{
@@ -182,7 +187,7 @@ mod test_rnmat{
 
     #[test]
     #[should_panic]
-    fn test_push_row_panic() {
+    fn test_panic_push_row() {
         let mut rnm = RNMat::from(vec![vec![(1, 2)]]);
         rnm.push_row(vec![RNum::new(1, 2), RNum::new(3, 4)]);
     }
@@ -208,7 +213,7 @@ mod test_rnmat{
 
     #[test]
     #[should_panic]
-    fn test_push_col_panic() {
+    fn test_panic_push_col() {
         let mut rnm = RNMat::from(vec![vec![(1, 2)]]);
         rnm.push_col(vec![RNum::new(1, 2), RNum::new(3, 4)]);
     }
@@ -249,7 +254,7 @@ mod test_rnmat{
     }
     #[test]
     #[should_panic]
-    fn test_swap_panic(){
+    fn test_panic_swap(){
         let mut mat1 = RNMat::from(vec![
             vec![(1, 2), (3, 4)],
             vec![(5, 6), (7, 8)]]
@@ -261,6 +266,29 @@ mod test_rnmat{
                 vec![(5, 6), (7, 8)],
                 vec![(1, 2), (3, 4)]]
             ))
+    }
+
+    #[test]
+    fn test_row_mul_scalar() {
+        let mut mat = RNMat::from(vec![vec![(1, 2), (3, 4)]]);
+        mat.row_mul_scalar(RNum::new(1, 2), 0usize);
+        assert_eq!(
+            mat,
+            RNMat::from(vec![vec![(1, 4), (3, 8)]])
+        );
+
+        mat.row_mul_scalar(RNum::new(0, 1), 0);
+        assert_eq!(
+            mat,
+            RNMat::from(vec![vec![(0, 1), (0, 2)]])
+        );
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_panic_row_mul_scalar(){
+        let mut mat = RNMat::new();
+        mat.row_mul_scalar(RNum::new(1, 2), 0);
     }
 
 }

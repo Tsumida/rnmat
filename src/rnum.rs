@@ -1,7 +1,4 @@
-#[path = "utils.rs"]
-mod utils;
-use utils::*;
-
+use super::utils::*;
 /// RNum represents a rational number.
 /// 
 /// # Examples
@@ -72,8 +69,10 @@ impl RNum{
             self.deno = 1;
         }else{
             let gcd_num = gcd(self.deno, self.nume);
-            self.deno /= gcd_num;
-            self.nume /= gcd_num;
+            if gcd_num > 1{
+                self.deno /= gcd_num;
+                self.nume /= gcd_num;
+            }
         }
     }
 
@@ -140,7 +139,7 @@ impl std::ops::Mul for RNum{
     type Output = Self;
     fn mul(self, rhs:RNum) -> Self::Output{
         let deno = self.deno * rhs.deno;
-        let nume = self.nume * self.nume;
+        let nume = self.nume * rhs.nume;
         let flag = self.neg_flag ^ rhs.neg_flag;
         // TODO: consider overflow.
         let mut res = RNum{
@@ -239,6 +238,7 @@ mod test_rnum{
     #[test]
     fn test_mul(){
         assert_eq!(RNum::new(1, 4), RNum::new(1, 2) * RNum::new(1, 2));
+        assert_eq!(RNum::new(3, 8), RNum::new(1, 2) * RNum::new(3, 4));
         assert_eq!(RNum::new(-1, 4), RNum::new(1, -2) * RNum::new(1, 2));
         assert_eq!(RNum::zero(), RNum::new(0, 10) * RNum::new(1, 2));
     }
@@ -252,7 +252,7 @@ mod test_rnum{
 
     #[test]
     #[should_panic]
-    fn test_div_zero(){
+    fn test_panic_div_zero(){
         let _ = RNum::new(1, 2) / RNum::new(0, 1);
     }
 
@@ -272,4 +272,6 @@ mod test_rnum{
         assert_eq!(p2, 0xfffffffe);
         assert_eq!(p2 << 1, 0xfffffffc);
     }
+
+    
 }
