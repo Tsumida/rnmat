@@ -1,18 +1,18 @@
 #[inline]
-pub fn gcd(mut a:u32, mut b:u32) -> u32{
-    if a < b{
+pub fn gcd(mut a: u32, mut b: u32) -> u32 {
+    if a < b {
         let tmp = b;
         b = a;
         a = tmp;
-    } 
-    if b == 1{
+    }
+    if b == 1 {
         1
-    }else if a == b || b == 0{
+    } else if a == b || b == 0 {
         a
-    }else{
+    } else {
         // gcd(a, b) = gcd(b, a % b)
         let mut r = a % b;
-        while r > 0{
+        while r > 0 {
             a = b;
             b = r;
             r = a % b;
@@ -21,14 +21,13 @@ pub fn gcd(mut a:u32, mut b:u32) -> u32{
     }
 }
 
-pub fn get_reduced_pair(a:u32, b:u32) -> (u32, u32){
+pub fn get_reduced_pair(a: u32, b: u32) -> (u32, u32) {
     let gcd_num = gcd(a, b);
     (a / gcd_num, b / gcd_num)
 }
 
-
 #[cfg(test)]
-mod utils_test{
+mod utils_test {
     use super::*;
 
     #[test]
@@ -51,4 +50,3 @@ mod utils_test{
         */
     }
 }
-
