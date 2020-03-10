@@ -1,6 +1,7 @@
 use super::rnum::RNum;
 use std::fmt::Display;
 
+/// Error occurs in RNMat operation.
 #[derive(Debug)]
 pub enum RNMatError{
     RowDismatch,
@@ -18,6 +19,22 @@ impl std::error::Error for RNMatError{}
 
 type Result<T> = std::result::Result<T, RNMatError>;
 
+/// Ration number matrix.
+/// # Example
+/// ```
+/// use rnmat::mat::RNMat;
+/// 
+/// let r1 = RNMat::from(
+///     vec![
+///         vec![(1, 2), (3, 4)],
+///         vec![(5, 6), (7, 8)],
+///     ]
+/// );
+/// let mut r2 = RNMat::new();
+/// r2.push_row(vec![(1, 2), (3, 4)]);
+/// r2.push_row(vec![(5, 6), (7, 8)]);
+/// assert_eq!(r1, r2);
+/// ```
 #[derive(Debug)]
 pub struct RNMat {
     mat: Vec<Vec<RNum>>,
@@ -41,21 +58,21 @@ impl RNMat {
         }
     }
 
-    pub fn push_row(&mut self, row: Vec<RNum>) -> Result<()>{
+    pub fn push_row(&mut self, row: Vec<(i32, i32)>) -> Result<()>{
         if self.mat.len() > 0 &&
             self.mat[0].len() != row.len(){
             return Err(RNMatError::RowDismatch)
         }
-        self.mat.push(row);
+        self.mat.push(row.into_iter().map(|e| RNum::new(e.0, e.1)).collect());
         Ok(())
     }
 
-    pub fn push_col(&mut self, col: Vec<RNum>) -> Result<()>{
+    pub fn push_col(&mut self, col: Vec<(i32, i32)>) -> Result<()>{
         let row_cnt = self.mat.len();
         if row_cnt == 0 {
             self.mat.extend(
                 col.into_iter()
-                    .map(|ele| vec![ele])
+                    .map(|ele| vec![RNum::new(ele.0, ele.1)])
                     .collect::<Vec<Vec<RNum>>>(),
             );
         } else {
@@ -63,7 +80,7 @@ impl RNMat {
                 return Err(RNMatError::ColDismatch);
             }
             for (i, ele) in col.into_iter().enumerate() {
-                self.mat[i].push(ele);
+                self.mat[i].push(RNum::new(ele.0, ele.1));
             }
         }
         Ok(())
@@ -80,11 +97,27 @@ impl RNMat {
         Ok(())
     }
 
-    pub fn row_mul_scalar(&mut self, factor: RNum, index: usize) -> Result<()>{
-        if self.mat.len() <= index{
+    /// Let entris in a given row times a factor.
+    /// # Example
+    /// ```
+    /// use rnmat::mat::RNMat;
+    /// 
+    /// let mut r1 = RNMat::from(vec![vec![(1, 2), (3, 4)]]);
+    /// let _ = r1.row_mul_scalar((1, 2), 0);
+    /// assert_eq!(
+    ///     r1,
+    ///     RNMat::from(
+    ///         vec![vec![(1, 4), (3, 8)]]
+    ///     )
+    /// );
+    /// 
+    /// ```
+    pub fn row_mul_scalar(&mut self, factor: (i32, i32), i: usize) -> Result<()>{
+        let factor = RNum::new(factor.0, factor.1);
+        if self.mat.len() <= i{
             return Err(RNMatError::InvalidIndex);
         }
-        self.mat[index]
+        self.mat[i]
             .iter_mut()
             .for_each(|ele| *ele = *ele * factor);
             Ok(())
@@ -184,7 +217,7 @@ mod test_rnmat {
         assert_eq!(0, rnm.row_num());
         assert_eq!(0, rnm.col_num());
 
-        rnm.push_row(vec![RNum::new(1, 2), RNum::new(3, 4)]).unwrap();
+        rnm.push_row(vec![(1, 2), (3, 4)]).unwrap();
         assert_eq!(1, rnm.row_num());
         assert_eq!(2, rnm.col_num());
     }
@@ -193,7 +226,7 @@ mod test_rnmat {
     #[should_panic]
     fn test_panic_push_row() {
         let mut rnm = RNMat::from(vec![vec![(1, 2)]]);
-        rnm.push_row(vec![RNum::new(1, 2), RNum::new(3, 4)]).unwrap();
+        rnm.push_row(vec![(1, 2), (3, 4)]).unwrap();
     }
 
     #[test]
@@ -202,7 +235,7 @@ mod test_rnmat {
         assert_eq!(0, rnm.row_num());
         assert_eq!(0, rnm.col_num());
 
-        rnm.push_col(vec![RNum::new(1, 2), RNum::new(3, 4)]).unwrap();
+        rnm.push_col(vec![(1, 2), (3, 4)]).unwrap();
         assert_eq!(rnm, RNMat::from(vec![vec![(1, 2)], vec![(3, 4)],]));
     }
 
@@ -210,7 +243,7 @@ mod test_rnmat {
     #[should_panic]
     fn test_panic_push_col() {
         let mut rnm = RNMat::from(vec![vec![(1, 2)]]);
-        rnm.push_col(vec![RNum::new(1, 2), RNum::new(3, 4)]).unwrap();
+        rnm.push_col(vec![(1, 2), (3, 4)]).unwrap();
     }
 
     #[test]
@@ -259,10 +292,10 @@ mod test_rnmat {
     #[test]
     fn test_row_mul_scalar() {
         let mut mat = RNMat::from(vec![vec![(1, 2), (3, 4)]]);
-        mat.row_mul_scalar(RNum::new(1, 2), 0usize).unwrap();
+        mat.row_mul_scalar((1, 2), 0usize).unwrap();
         assert_eq!(mat, RNMat::from(vec![vec![(1, 4), (3, 8)]]));
 
-        mat.row_mul_scalar(RNum::new(0, 1), 0).unwrap();
+        mat.row_mul_scalar((0, 1), 0).unwrap();
         assert_eq!(mat, RNMat::from(vec![vec![(0, 1), (0, 2)]]));
     }
 
@@ -270,6 +303,6 @@ mod test_rnmat {
     #[should_panic]
     fn test_panic_row_mul_scalar() {
         let mut mat = RNMat::new();
-        mat.row_mul_scalar(RNum::new(1, 2), 0).unwrap();
+        mat.row_mul_scalar((1, 2), 0).unwrap();
     }
 }

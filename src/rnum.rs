@@ -1,6 +1,5 @@
 use super::utils::*;
 /// RNum represents a rational number.
-///
 /// # Examples
 ///
 /// ```
@@ -9,6 +8,7 @@ use super::utils::*;
 /// ```
 #[derive(Debug, Clone, Copy)]
 pub struct RNum {
+    // may change in the future.
     neg_flag: bool,
     nume: u32,
     deno: u32,
